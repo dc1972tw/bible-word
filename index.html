@@ -35,7 +35,7 @@
             </div>
             <div class="flex items-center gap-2 text-sm text-amber-100 bg-amber-950/40 px-3 py-1.5 rounded-full border border-amber-800">
                 <i class="fa-solid fa-circle-nodes text-emerald-400 animate-pulse"></i>
-                <span>Gemini 2.5 雙職事智能檢索</span>
+                <span>Gemini 雙職事智能檢索</span>
             </div>
         </div>
     </header>
@@ -46,7 +46,7 @@
         <!-- Left Panel: Control & Options -->
         <section class="lg:col-span-5 flex flex-col gap-6">
             
-            <!-- API Key Configuration Box -->
+            <!-- API Key Configuration Box (CRITICAL FIX) -->
             <div id="apiKeyBox" class="bg-white rounded-2xl p-6 shadow-sm border border-red-200 transition-colors duration-300">
                 <h2 class="text-sm font-bold text-stone-900 mb-2 flex items-center gap-2">
                     <i class="fa-solid fa-key text-rose-600" id="keyIcon"></i>
@@ -425,7 +425,8 @@
                 tools: [{ "google_search": {} }] 
             };
 
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            // Using standard highly stable gemini-1.5-flash model
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
             for (let i = 0; i < retries; i++) {
                 try {
@@ -1032,3 +1033,4 @@ Your objective is to:
         }
     </script>
 </body>
+</html>
