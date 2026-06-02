@@ -45,6 +45,33 @@
         
         <!-- Left Panel: Control & Options -->
         <section class="lg:col-span-5 flex flex-col gap-6">
+            
+            <!-- API Key Configuration Box -->
+            <div id="apiKeyBox" class="bg-white rounded-2xl p-6 shadow-sm border border-red-200 transition-colors duration-300">
+                <h2 class="text-sm font-bold text-stone-900 mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-key text-rose-600" id="keyIcon"></i>
+                    系統設定：請輸入您的 Gemini API 金鑰
+                </h2>
+                <p class="text-xs text-stone-500 mb-3 leading-relaxed">
+                    本程式是在您的瀏覽器端直接運行，金鑰將安全儲存在本機瀏覽器中，絕對不會外洩。
+                </p>
+                <div class="space-y-3">
+                    <div class="flex gap-2">
+                        <input type="password" id="apiKeyInput" 
+                            class="flex-grow pl-3 pr-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent transition-all placeholder:text-stone-400 font-mono"
+                            placeholder="請在此貼上您的 AIzaSy... 金鑰">
+                        <button onclick="saveApiKey()" class="bg-amber-800 hover:bg-amber-950 text-white text-xs font-semibold px-4 py-2 rounded-xl transition-colors">
+                            儲存金鑰
+                        </button>
+                    </div>
+                    <p class="text-xs">
+                        <a href="https://aistudio.google.com/" target="_blank" class="text-amber-800 hover:underline font-semibold flex items-center gap-1">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> 點此免費申請您的專屬 API 金鑰 (1分鐘搞定)
+                        </a>
+                    </p>
+                </div>
+            </div>
+
             <!-- Search Input Box -->
             <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-200/80">
                 <h2 class="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
@@ -135,7 +162,7 @@
                             <input type="checkbox" id="includeNeeWritings" checked class="w-4 h-4 text-amber-800 rounded focus:ring-amber-600">
                         </label>
                         <label class="flex items-center justify-between text-sm text-stone-700 py-1 cursor-pointer">
-                            <span class="font-medium text-emerald-950">引入李常受著作/生命讀經文獻</span>
+                            <span class="font-medium text-emerald-900">引入李常受著作/生命讀經文獻</span>
                             <input type="checkbox" id="includeLeeWritings" checked class="w-4 h-4 text-emerald-800 rounded focus:ring-emerald-600">
                         </label>
                     </div>
@@ -269,7 +296,44 @@
     <script>
         // Global State
         let bibleData = null;
-        const apiKey = ""; // Runtime-filled empty key as required
+        let apiKey = localStorage.getItem('gemini_bible_api_key') || "";
+
+        // On Load Page Init
+        window.onload = function() {
+            const savedKey = localStorage.getItem('gemini_bible_api_key');
+            if (savedKey) {
+                document.getElementById('apiKeyInput').value = savedKey;
+                updateApiKeyUI(true);
+            }
+        };
+
+        // Save API Key securely in localStorage
+        function saveApiKey() {
+            const inputVal = document.getElementById('apiKeyInput').value.trim();
+            if (!inputVal) {
+                showToast("請輸入有效的 Gemini API 金鑰！", "fa-triangle-exclamation", "text-rose-500");
+                return;
+            }
+            localStorage.setItem('gemini_bible_api_key', inputVal);
+            apiKey = inputVal;
+            updateApiKeyUI(true);
+            showToast("金鑰已安全儲存！您現在可以開始檢索聖經了", "fa-circle-check", "text-emerald-500");
+        }
+
+        // Update UI color based on key state
+        function updateApiKeyUI(isValid) {
+            const box = document.getElementById('apiKeyBox');
+            const icon = document.getElementById('keyIcon');
+            if (isValid) {
+                box.classList.remove('border-red-200');
+                box.classList.add('border-emerald-500', 'bg-emerald-50/10');
+                icon.className = "fa-solid fa-circle-check text-emerald-600";
+            } else {
+                box.classList.remove('border-emerald-500', 'bg-emerald-50/10');
+                box.classList.add('border-red-200');
+                icon.className = "fa-solid fa-key text-rose-600";
+            }
+        }
 
         // Custom UI Toaster
         function showToast(message, iconClass = "fa-circle-info", colorClass = "text-amber-500") {
@@ -335,9 +399,9 @@
                                 items: {
                                     type: "OBJECT",
                                     properties: {
-                                        bookTitle: { type: "STRING" }, // 書名或信息標題
-                                        excerpt: { type: "STRING" },   // 精彩摘錄
-                                        application: { type: "STRING" } // 屬靈應用
+                                        bookTitle: { type: "STRING" }, 
+                                        excerpt: { type: "STRING" },   
+                                        application: { type: "STRING" } 
                                     },
                                     required: ["bookTitle", "excerpt", "application"]
                                 }
@@ -347,9 +411,9 @@
                                 items: {
                                     type: "OBJECT",
                                     properties: {
-                                        bookTitle: { type: "STRING" }, // 生命讀經或著作名稱
-                                        excerpt: { type: "STRING" },   // 生命讀經信息精華摘錄
-                                        application: { type: "STRING" } // 真理看見與召會實行
+                                        bookTitle: { type: "STRING" }, 
+                                        excerpt: { type: "STRING" },   
+                                        application: { type: "STRING" } 
                                     },
                                     required: ["bookTitle", "excerpt", "application"]
                                 }
@@ -358,7 +422,7 @@
                         required: ["reference", "summary", "verses", "watchmanNeeWritings", "witnessLeeWritings"]
                     }
                 },
-                tools: [{ "google_search": {} }] // Enable search grounding
+                tools: [{ "google_search": {} }] 
             };
 
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
@@ -395,6 +459,12 @@
 
         // Trigger fetching bible data
         async function fetchBibleData() {
+            if (!apiKey) {
+                showToast("請先在左側欄位輸入並儲存您的 Gemini API 金鑰！", "fa-key", "text-rose-500");
+                document.getElementById('apiKeyBox').scrollIntoView({ behavior: 'smooth' });
+                return;
+            }
+
             const chapterInput = document.getElementById('chapterInput').value.trim();
             if (!chapterInput) {
                 showToast("請輸入欲搜尋的聖經章節！", "fa-triangle-exclamation", "text-rose-500");
@@ -433,7 +503,7 @@ Your objective is to:
 
             } catch (error) {
                 console.error(error);
-                showToast("檢索失敗，請檢查章節格式並再試一次！", "fa-circle-xmark", "text-rose-500");
+                showToast("檢索失敗，請確認您的 API 金鑰是否正確、或檢查章節格式！", "fa-circle-xmark", "text-rose-500");
                 
                 document.getElementById('emptyState').classList.remove('hidden');
                 document.getElementById('loadingState').classList.add('hidden');
@@ -955,3 +1025,11 @@ Your objective is to:
             a.download = `${bibleData.reference}_中英文對照經文與雙職事研讀文獻.doc`;
             document.body.appendChild(a);
             a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast("Word 文件已成功下載！已整合倪柝聲與李常受弟兄職事對照", "fa-circle-check", "text-emerald-500");
+        }
+    </script>
+</body>
+</html>
