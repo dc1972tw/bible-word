@@ -1,1 +1,957 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中英文恢復本聖經 Word 產生器</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        .bible-text {
+            font-family: 'Noto Serif TC', serif;
+        }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800 min-h-screen flex flex-col">
 
+    <!-- Header -->
+    <header class="bg-amber-900 text-amber-50 shadow-md py-5 px-6 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-amber-100 text-amber-900 p-2.5 rounded-xl shadow-inner">
+                    <i class="fa-solid fa-book-bible text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold font-serif tracking-wide">中英文恢復本聖經 Word 產生器</h1>
+                    <p class="text-xs text-amber-200/80 mt-0.5">自動檢索恢復本聖經、註解、倪柝聲著作與李常受生命讀經文獻</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 text-sm text-amber-100 bg-amber-950/40 px-3 py-1.5 rounded-full border border-amber-800">
+                <i class="fa-solid fa-circle-nodes text-emerald-400 animate-pulse"></i>
+                <span>Gemini 2.5 雙職事智能檢索</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Grid -->
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left Panel: Control & Options -->
+        <section class="lg:col-span-5 flex flex-col gap-6">
+            <!-- Search Input Box -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-200/80">
+                <h2 class="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-magnifying-glass text-amber-700"></i>
+                    第一步：輸入目標經文
+                </h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-stone-500 mb-1.5">請輸入書卷與章節</label>
+                        <div class="relative">
+                            <input type="text" id="chapterInput" 
+                                class="w-full pl-4 pr-12 py-3 bg-stone-50 border border-stone-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent transition-all placeholder:text-stone-400 font-medium"
+                                placeholder="例如：創世記 1, 約翰福音 3:1-16, Romans 12"
+                                value="羅馬書 12:1-3">
+                            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 text-xs bg-stone-200/60 px-2 py-1 rounded">Enter</span>
+                        </div>
+                        <p class="text-xs text-stone-400 mt-2">支援中英文書卷名稱、單章或範圍（例如：創世記 1:1-5）</p>
+                    </div>
+
+                    <!-- Fast Selection Pills -->
+                    <div class="flex flex-wrap gap-1.5">
+                        <span class="text-xs text-stone-400 mr-1 self-center">常用推薦:</span>
+                        <button onclick="setFastChapter('約翰福音 1:1-5')" class="text-xs bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 px-2.5 py-1 rounded-lg transition-colors">約一 1:1-5</button>
+                        <button onclick="setFastChapter('創世記 1:1-3')" class="text-xs bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 px-2.5 py-1 rounded-lg transition-colors">創世記 1</button>
+                        <button onclick="setFastChapter('希伯來書 11:1-6')" class="text-xs bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 px-2.5 py-1 rounded-lg transition-colors">希 11:1-6</button>
+                        <button onclick="setFastChapter('以弗所書 1:3-6')" class="text-xs bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 px-2.5 py-1 rounded-lg transition-colors">弗 1:3-6</button>
+                    </div>
+
+                    <button id="searchBtn" onclick="fetchBibleData()"
+                        class="w-full bg-amber-800 hover:bg-amber-900 active:bg-amber-950 text-white font-semibold py-3 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-cloud-arrow-down"></i>
+                        <span>開始檢索經文與文獻</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Customization Box -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-200/80">
+                <h2 class="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-amber-700"></i>
+                    第二步：匯出與排版設定
+                </h2>
+                <div class="space-y-4">
+                    <!-- Format Style Selection -->
+                    <div>
+                        <label class="block text-sm font-medium text-stone-500 mb-2">Word 文件排版樣式</label>
+                        <div class="grid grid-cols-1 gap-2">
+                            <label class="relative flex items-center gap-3 p-3 rounded-xl border border-stone-200 hover:bg-stone-50 cursor-pointer transition-colors">
+                                <input type="radio" name="layoutStyle" value="table" checked class="w-4 h-4 text-amber-800 focus:ring-amber-600">
+                                <div class="flex-grow">
+                                    <div class="text-sm font-bold text-stone-800">左右雙欄對照表 (極力推薦)</div>
+                                    <div class="text-xs text-stone-400">中英文並列，閱讀感極佳，適合精讀</div>
+                                </div>
+                            </label>
+                            <label class="relative flex items-center gap-3 p-3 rounded-xl border border-stone-200 hover:bg-stone-50 cursor-pointer transition-colors">
+                                <input type="radio" name="layoutStyle" value="interlinear" class="w-4 h-4 text-amber-800 focus:ring-amber-600">
+                                <div class="flex-grow">
+                                    <div class="text-sm font-bold text-stone-800">隔行對照 (中上英下)</div>
+                                    <div class="text-xs text-stone-400">中文在上、英文在下，按節依次排序</div>
+                                </div>
+                            </label>
+                            <label class="relative flex items-center gap-3 p-3 rounded-xl border border-stone-200 hover:bg-stone-50 cursor-pointer transition-colors">
+                                <input type="radio" name="layoutStyle" value="segmented" class="w-4 h-4 text-amber-800 focus:ring-amber-600">
+                                <div class="flex-grow">
+                                    <div class="text-sm font-bold text-stone-800">中英整段分開</div>
+                                    <div class="text-xs text-stone-400">完整中文經文在前半段，英文在後半段</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Toggle features -->
+                    <div class="border-t border-stone-100 pt-4 space-y-2">
+                        <label class="flex items-center justify-between text-sm text-stone-700 py-1 cursor-pointer">
+                            <span>顯示並匯出註解 (Footnotes)</span>
+                            <input type="checkbox" id="includeFootnotes" checked class="w-4 h-4 text-amber-800 rounded focus:ring-amber-600">
+                        </label>
+                        <label class="flex items-center justify-between text-sm text-stone-700 py-1 cursor-pointer">
+                            <span>在經文中加註解標記 (例如 <sup>1</sup>)</span>
+                            <input type="checkbox" id="markFootnotes" checked class="w-4 h-4 text-amber-800 rounded focus:ring-amber-600">
+                        </label>
+                        <label class="flex items-center justify-between text-sm text-stone-700 py-1 cursor-pointer">
+                            <span>啟用背景考經功能 (自動產生摘要)</span>
+                            <input type="checkbox" id="includeSummary" checked class="w-4 h-4 text-amber-800 rounded focus:ring-amber-600">
+                        </label>
+                        <label class="flex items-center justify-between text-sm text-stone-700 py-1 cursor-pointer">
+                            <span class="font-medium text-amber-900">引入倪柝聲著作相關文獻</span>
+                            <input type="checkbox" id="includeNeeWritings" checked class="w-4 h-4 text-amber-800 rounded focus:ring-amber-600">
+                        </label>
+                        <label class="flex items-center justify-between text-sm text-stone-700 py-1 cursor-pointer">
+                            <span class="font-medium text-emerald-950">引入李常受著作/生命讀經文獻</span>
+                            <input type="checkbox" id="includeLeeWritings" checked class="w-4 h-4 text-emerald-800 rounded focus:ring-emerald-600">
+                        </label>
+                    </div>
+
+                    <!-- Export Actions -->
+                    <div class="border-t border-stone-100 pt-4 grid grid-cols-2 gap-3">
+                        <button id="copyBtn" onclick="copyFormattedText()" disabled
+                            class="bg-stone-100 hover:bg-stone-200 disabled:opacity-50 disabled:cursor-not-allowed text-stone-700 font-semibold py-3 px-3 rounded-xl border border-stone-300 transition-all flex items-center justify-center gap-1.5 text-sm">
+                            <i class="fa-solid fa-copy"></i>
+                            <span>複製對照</span>
+                        </button>
+                        <button id="downloadWordBtn" onclick="downloadWordDocument()" disabled
+                            class="bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 px-3 rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5 text-sm">
+                            <i class="fa-solid fa-file-word"></i>
+                            <span>匯出 Word 檔</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Panel: Preview Area -->
+        <section class="lg:col-span-7 flex flex-col min-h-[500px]">
+            <div class="bg-white rounded-2xl shadow-sm border border-stone-200/80 flex-grow flex flex-col overflow-hidden">
+                <!-- Preview Tabs & Header -->
+                <div class="bg-stone-50 border-b border-stone-100 px-6 py-4 flex justify-between items-center shrink-0">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-regular fa-eye text-amber-800"></i>
+                        <span class="font-bold text-stone-950">即時內容預覽</span>
+                    </div>
+                    <span id="previewRef" class="text-xs font-semibold bg-amber-100 text-amber-900 px-3 py-1 rounded-full border border-amber-200">
+                        等待檢索...
+                    </span>
+                </div>
+
+                <!-- Preview Area Loading / Empty States -->
+                <div id="previewContainer" class="flex-grow p-6 overflow-y-auto max-h-[60vh] lg:max-h-[70vh] flex flex-col">
+                    
+                    <!-- Welcome / Empty State -->
+                    <div id="emptyState" class="flex-grow flex flex-col justify-center items-center text-center py-12 px-6">
+                        <div class="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mb-4 text-amber-700/80 border border-amber-100 animate-pulse">
+                            <i class="fa-solid fa-book-open-reader text-3xl"></i>
+                        </div>
+                        <h3 class="font-serif text-lg font-bold text-stone-800 mb-1.5">輸入章節，一鍵智慧排版</h3>
+                        <p class="text-sm text-stone-500 max-w-sm">
+                            我們將透過 AI 為您精準搜尋並彙整 **中英文恢復本聖經**、大師級讀經註解，以及 **倪柝聲、李常受弟兄著作與生命讀經** 相關對照文獻。
+                        </p>
+                    </div>
+
+                    <!-- Loading State -->
+                    <div id="loadingState" class="hidden flex-grow flex-col justify-center items-center py-12">
+                        <div class="relative w-16 h-16 mb-4">
+                            <div class="absolute inset-0 rounded-full border-4 border-amber-100"></div>
+                            <div class="absolute inset-0 rounded-full border-4 border-amber-700 border-t-transparent animate-spin"></div>
+                        </div>
+                        <h4 class="font-bold text-stone-800 mb-1">正在連線至檢索庫...</h4>
+                        <p id="loadingMsg" class="text-xs text-stone-400">正在獲取恢復本經文、詳細註解與倪柝聲、李常受著作文獻</p>
+                    </div>
+
+                    <!-- Actual Preview Content (Initially Hidden) -->
+                    <div id="previewContent" class="hidden space-y-6">
+                        <!-- Overview / Intro Card -->
+                        <div id="summaryCard" class="bg-amber-50/50 border border-amber-100/80 p-4 rounded-xl">
+                            <h4 class="text-xs font-bold text-amber-900 uppercase tracking-wider mb-1">章節概要與研讀指引</h4>
+                            <p id="chapterSummary" class="text-xs text-stone-600 leading-relaxed">
+                                正在分析本章節在神聖啟示中的關鍵地位與真理重點...
+                            </p>
+                        </div>
+
+                        <!-- Verses Container -->
+                        <div id="versesRenderBox" class="space-y-4">
+                            <!-- Injected dynamically -->
+                        </div>
+
+                        <!-- Watchman Nee Writings Card -->
+                        <div id="neeWritingsCard" class="bg-stone-50 border border-stone-200 p-5 rounded-xl space-y-3">
+                            <h4 class="text-sm font-bold text-amber-900 flex items-center gap-1.5">
+                                <i class="fa-solid fa-quote-left text-amber-700"></i>
+                                倪柝聲弟兄相關著作與職事信息對照
+                            </h4>
+                            <div id="neeWritingsList" class="space-y-4 text-xs text-stone-700 leading-relaxed">
+                                <!-- Injected dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Witness Lee Writings Card -->
+                        <div id="leeWritingsCard" class="bg-stone-50 border border-stone-200 p-5 rounded-xl space-y-3">
+                            <h4 class="text-sm font-bold text-emerald-900 flex items-center gap-1.5">
+                                <i class="fa-solid fa-quote-left text-emerald-700"></i>
+                                李常受弟兄相關著作與生命讀經對照
+                            </h4>
+                            <div id="leeWritingsList" class="space-y-4 text-xs text-stone-700 leading-relaxed">
+                                <!-- Injected dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Footnotes Panel -->
+                        <div id="footnotesRenderBox" class="border-t border-stone-200 pt-5 mt-6 space-y-3">
+                            <h4 class="text-sm font-bold text-stone-900 flex items-center gap-1.5">
+                                <i class="fa-solid fa-feather-pointed text-amber-800"></i>
+                                本章精彩註解
+                            </h4>
+                            <div id="footnotesList" class="space-y-2 text-xs text-stone-600">
+                                <!-- Injected dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-stone-900 text-stone-500 text-xs py-6 border-t border-stone-800 text-center shrink-0">
+        <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <p>© 2026 恢復本聖經排版工具. 本程式供學術與信仰研讀使用，經文與註解版權歸原出版機構所有。</p>
+            <div class="flex gap-4">
+                <span class="hover:text-stone-300 transition-colors"><i class="fa-solid fa-heart text-rose-700"></i> 助於神聖的話傳揚</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Toast Notification Widget -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-stone-950 text-stone-100 px-4 py-3 rounded-xl shadow-xl flex items-center gap-2 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none z-50 text-sm">
+        <span id="toastIcon" class="text-amber-500"><i class="fa-solid fa-circle-info"></i></span>
+        <span id="toastMsg">這是一條通知訊息</span>
+    </div>
+
+    <!-- Scripting & API Logics -->
+    <script>
+        // Global State
+        let bibleData = null;
+        const apiKey = ""; // Runtime-filled empty key as required
+
+        // Custom UI Toaster
+        function showToast(message, iconClass = "fa-circle-info", colorClass = "text-amber-500") {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            const toastIcon = document.getElementById('toastIcon');
+            
+            toastIcon.innerHTML = `<i class="fa-solid ${iconClass} ${colorClass}"></i>`;
+            toastMsg.innerText = message;
+            
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 3000);
+        }
+
+        function setFastChapter(val) {
+            document.getElementById('chapterInput').value = val;
+            showToast(`已填入: ${val}`, "fa-circle-check", "text-emerald-500");
+        }
+
+        // Gemini Fetch with Exponential Backoff
+        async function fetchGeminiWithBackoff(prompt, systemInstruction, retries = 5, delay = 1000) {
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: { parts: [{ text: systemInstruction }] },
+                generationConfig: { 
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            reference: { type: "STRING" },
+                            summary: { type: "STRING" },
+                            verses: {
+                                type: "ARRAY",
+                                items: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        number: { type: "INTEGER" },
+                                        zh: { type: "STRING" },
+                                        en: { type: "STRING" },
+                                        footnotes: {
+                                            type: "ARRAY",
+                                            items: {
+                                                type: "OBJECT",
+                                                properties: {
+                                                    phrase: { type: "STRING" },
+                                                    noteNum: { type: "STRING" },
+                                                    text: { type: "STRING" }
+                                                },
+                                                required: ["phrase", "noteNum", "text"]
+                                            }
+                                        }
+                                    },
+                                    required: ["number", "zh", "en", "footnotes"]
+                                }
+                            },
+                            watchmanNeeWritings: {
+                                type: "ARRAY",
+                                items: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        bookTitle: { type: "STRING" }, // 書名或信息標題
+                                        excerpt: { type: "STRING" },   // 精彩摘錄
+                                        application: { type: "STRING" } // 屬靈應用
+                                    },
+                                    required: ["bookTitle", "excerpt", "application"]
+                                }
+                            },
+                            witnessLeeWritings: {
+                                type: "ARRAY",
+                                items: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        bookTitle: { type: "STRING" }, // 生命讀經或著作名稱
+                                        excerpt: { type: "STRING" },   // 生命讀經信息精華摘錄
+                                        application: { type: "STRING" } // 真理看見與召會實行
+                                    },
+                                    required: ["bookTitle", "excerpt", "application"]
+                                }
+                            }
+                        },
+                        required: ["reference", "summary", "verses", "watchmanNeeWritings", "witnessLeeWritings"]
+                    }
+                },
+                tools: [{ "google_search": {} }] // Enable search grounding
+            };
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP Error Status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (text) {
+                        return JSON.parse(text);
+                    } else {
+                        throw new Error("Empty response from AI engine.");
+                    }
+                } catch (error) {
+                    if (i === retries - 1) {
+                        throw error;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)));
+                }
+            }
+        }
+
+        // Trigger fetching bible data
+        async function fetchBibleData() {
+            const chapterInput = document.getElementById('chapterInput').value.trim();
+            if (!chapterInput) {
+                showToast("請輸入欲搜尋的聖經章節！", "fa-triangle-exclamation", "text-rose-500");
+                return;
+            }
+
+            // Adjust Loading state UI
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('previewContent').classList.add('hidden');
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('loadingMsg').innerText = "正在連線聖經與雙職事文獻庫，抓取中英文經文、註解、倪柝聲弟兄與李常受弟兄相關著作對照中...";
+
+            const searchBtn = document.getElementById('searchBtn');
+            searchBtn.disabled = true;
+            searchBtn.classList.add('opacity-75');
+
+            const systemPrompt = `You are an expert Bible recovery version compiler, layout designer, and a deep scholar of the ministry of Watchman Nee (倪柝聲) and Witness Lee (李常受), specifically LSM (Living Stream Ministry) publications and Literature.
+Your objective is to:
+1. Fetch the exact verses and footnotes of the Bible Recovery Version (恢復本聖經) for both Traditional Chinese (繁體中文) and LSM English Recovery Version based on the user's input.
+2. Use Google Search grounding tools to verify the precision of the recovery version text and the footnotes. Make sure the scriptures match perfectly and do not skip or summarize verses.
+3. Identify 1 to 2 highly relevant books or ministry messages by Watchman Nee (such as 'The Normal Christian Life'《正常的基督徒生活》, 'The Spiritual Man'《屬靈人》, etc.) that illuminate this exact scripture portion. Extract/summarize insights.
+4. Identify 1 to 2 highly relevant books or Life-Study messages (生命讀經) by Witness Lee (such as 'Life-Study of Romans'《羅馬書生命讀經》, 'The Economy of God'《神的經綸》, 'The All-Inclusive Christ'《包羅萬有的基督》, etc.) that explain and unpack this exact portion of scripture. Extract/summarize insights and practical application.
+5. Always output structural JSON content that conforms EXACTLY to the requested JSON Schema.
+6. Provide the output in Traditional Chinese (繁體中文) for the Chinese parts.`;
+
+            try {
+                const data = await fetchGeminiWithBackoff(`Please fetch the Recovery Version text (Traditional Chinese and English Recovery Version), important footnotes, related writings by Watchman Nee (倪柝聲), and related Life-studies/writings by Witness Lee (李常受) for reference: "${chapterInput}". Ensure accuracy using search!`, systemPrompt);
+                
+                bibleData = data;
+                renderPreview();
+                showToast("經文與雙職事文獻檢索成功！已加載排版", "fa-circle-check", "text-emerald-500");
+
+                // Enable buttons
+                document.getElementById('copyBtn').disabled = false;
+                document.getElementById('downloadWordBtn').disabled = false;
+
+            } catch (error) {
+                console.error(error);
+                showToast("檢索失敗，請檢查章節格式並再試一次！", "fa-circle-xmark", "text-rose-500");
+                
+                document.getElementById('emptyState').classList.remove('hidden');
+                document.getElementById('loadingState').classList.add('hidden');
+            } finally {
+                searchBtn.disabled = false;
+                searchBtn.classList.remove('opacity-75');
+            }
+        }
+
+        // Render Loaded content to preview screen
+        function renderPreview() {
+            if (!bibleData) return;
+
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('previewContent').classList.remove('hidden');
+
+            // Set Header Ref
+            document.getElementById('previewRef').innerText = bibleData.reference;
+
+            // Render Summary Card
+            const includeSummary = document.getElementById('includeSummary').checked;
+            const summaryCard = document.getElementById('summaryCard');
+            if (includeSummary && bibleData.summary) {
+                summaryCard.classList.remove('hidden');
+                document.getElementById('chapterSummary').innerText = bibleData.summary;
+            } else {
+                summaryCard.classList.add('hidden');
+            }
+
+            // Render Verses Box
+            const versesBox = document.getElementById('versesRenderBox');
+            versesBox.innerHTML = "";
+            const includeNotes = document.getElementById('includeFootnotes').checked;
+            const markNotes = document.getElementById('markFootnotes').checked;
+
+            bibleData.verses.forEach(v => {
+                const row = document.createElement('div');
+                row.className = "p-4 rounded-xl hover:bg-stone-50 border-b border-stone-100 transition-colors flex flex-col md:grid md:grid-cols-2 gap-4";
+                
+                // Add note references if needed
+                let processedZh = v.zh;
+                let processedEn = v.en;
+                
+                if (includeNotes && markNotes && v.footnotes && v.footnotes.length > 0) {
+                    v.footnotes.forEach((fn, idx) => {
+                        const noteMarker = `<sup class="text-amber-700 font-bold ml-0.5 cursor-help" title="${fn.text}">[註${fn.noteNum}]</sup>`;
+                        if (fn.phrase && processedZh.includes(fn.phrase)) {
+                            processedZh = processedZh.replace(fn.phrase, `${fn.phrase}${noteMarker}`);
+                        } else {
+                            processedZh += noteMarker;
+                        }
+                    });
+                }
+
+                row.innerHTML = `
+                    <div class="bible-text text-base leading-relaxed">
+                        <span class="text-amber-800 font-bold mr-2 text-sm select-none">${v.number}</span>
+                        <span class="text-stone-900">${processedZh}</span>
+                    </div>
+                    <div class="bible-text text-stone-600 text-sm md:text-base leading-relaxed md:border-l md:border-stone-100 md:pl-4">
+                        <span class="text-amber-800/60 font-bold mr-2 text-xs select-none">${v.number}</span>
+                        <span>${processedEn}</span>
+                    </div>
+                `;
+                versesBox.appendChild(row);
+            });
+
+            // Render Watchman Nee Writings Card
+            const includeNee = document.getElementById('includeNeeWritings').checked;
+            const neeCard = document.getElementById('neeWritingsCard');
+            const neeList = document.getElementById('neeWritingsList');
+            
+            if (includeNee && bibleData.watchmanNeeWritings && bibleData.watchmanNeeWritings.length > 0) {
+                neeCard.classList.remove('hidden');
+                neeList.innerHTML = "";
+                bibleData.watchmanNeeWritings.forEach(item => {
+                    const writingItem = document.createElement('div');
+                    writingItem.className = "border-l-4 border-amber-800 pl-4 py-1 space-y-2 bg-amber-50/20 rounded-r-lg p-3";
+                    writingItem.innerHTML = `
+                        <div class="font-bold text-amber-900 text-sm flex items-center gap-1.5">
+                            <i class="fa-solid fa-book"></i>
+                            <span>${item.bookTitle}</span>
+                        </div>
+                        <p class="text-stone-700 italic font-serif">「${item.excerpt}」</p>
+                        <p class="text-stone-600 text-xs pt-1 border-t border-dashed border-stone-200">
+                            <strong class="text-amber-950">真理應用：</strong>${item.application}
+                        </p>
+                    `;
+                    neeList.appendChild(writingItem);
+                });
+            } else {
+                neeCard.classList.add('hidden');
+            }
+
+            // Render Witness Lee Writings Card
+            const includeLee = document.getElementById('includeLeeWritings').checked;
+            const leeCard = document.getElementById('leeWritingsCard');
+            const leeList = document.getElementById('leeWritingsList');
+            
+            if (includeLee && bibleData.witnessLeeWritings && bibleData.witnessLeeWritings.length > 0) {
+                leeCard.classList.remove('hidden');
+                leeList.innerHTML = "";
+                bibleData.witnessLeeWritings.forEach(item => {
+                    const writingItem = document.createElement('div');
+                    writingItem.className = "border-l-4 border-emerald-800 pl-4 py-1 space-y-2 bg-emerald-50/20 rounded-r-lg p-3";
+                    writingItem.innerHTML = `
+                        <div class="font-bold text-emerald-900 text-sm flex items-center gap-1.5">
+                            <i class="fa-solid fa-gem"></i>
+                            <span>${item.bookTitle}</span>
+                        </div>
+                        <p class="text-stone-700 italic font-serif">「${item.excerpt}」</p>
+                        <p class="text-stone-600 text-xs pt-1 border-t border-dashed border-emerald-100">
+                            <strong class="text-emerald-950">生命讀經與應用：</strong>${item.application}
+                        </p>
+                    `;
+                    leeList.appendChild(writingItem);
+                });
+            } else {
+                leeCard.classList.add('hidden');
+            }
+
+            // Render Footnotes
+            const footnotesPanel = document.getElementById('footnotesRenderBox');
+            const footnotesList = document.getElementById('footnotesList');
+            
+            let allFootnotes = [];
+            bibleData.verses.forEach(v => {
+                if (v.footnotes && v.footnotes.length > 0) {
+                    v.footnotes.forEach(fn => {
+                        allFootnotes.push({
+                            verseNum: v.number,
+                            ...fn
+                        });
+                    });
+                }
+            });
+
+            if (includeNotes && allFootnotes.length > 0) {
+                footnotesPanel.classList.remove('hidden');
+                footnotesList.innerHTML = "";
+                allFootnotes.forEach(fn => {
+                    const item = document.createElement('div');
+                    item.className = "bg-stone-50 hover:bg-amber-50/30 p-2.5 rounded-lg border border-stone-200/50 leading-relaxed transition-all";
+                    item.innerHTML = `
+                        <p class="font-serif text-stone-700">
+                            <span class="font-bold text-amber-800 mr-1">第 ${fn.verseNum} 節 [註 ${fn.noteNum}]</span> 
+                            指 <span class="bg-amber-100 px-1 rounded text-stone-800">「${fn.phrase}」</span>：${fn.text}
+                        </p>
+                    `;
+                    footnotesList.appendChild(item);
+                });
+            } else {
+                footnotesPanel.classList.add('hidden');
+            }
+        }
+
+        // Sync settings when options change
+        document.getElementById('includeFootnotes').addEventListener('change', renderPreview);
+        document.getElementById('markFootnotes').addEventListener('change', renderPreview);
+        document.getElementById('includeSummary').addEventListener('change', renderPreview);
+        document.getElementById('includeNeeWritings').addEventListener('change', renderPreview);
+        document.getElementById('includeLeeWritings').addEventListener('change', renderPreview);
+
+        // Copy Formatted content to Clipboard
+        function copyFormattedText() {
+            if (!bibleData) return;
+            
+            let copyStr = `【中英文對照恢復本聖經 - ${bibleData.reference}】\n\n`;
+            
+            if (document.getElementById('includeSummary').checked && bibleData.summary) {
+                copyStr += `章節概要：\n${bibleData.summary}\n\n`;
+            }
+
+            bibleData.verses.forEach(v => {
+                copyStr += `${v.number} ${v.zh}\n`;
+                copyStr += `${v.number} ${v.en}\n\n`;
+            });
+
+            // Add Watchman Nee Writings if any
+            if (document.getElementById('includeNeeWritings').checked && bibleData.watchmanNeeWritings && bibleData.watchmanNeeWritings.length > 0) {
+                copyStr += `【倪柝聲著作相關文獻對照】\n`;
+                bibleData.watchmanNeeWritings.forEach(item => {
+                    copyStr += `出處著作：${item.bookTitle}\n`;
+                    copyStr += `職事信息摘錄：「${item.excerpt}」\n`;
+                    copyStr += `真理應用與看見：${item.application}\n\n`;
+                });
+            }
+
+            // Add Witness Lee Writings if any
+            if (document.getElementById('includeLeeWritings').checked && bibleData.witnessLeeWritings && bibleData.witnessLeeWritings.length > 0) {
+                copyStr += `【李常受著作與生命讀經對照】\n`;
+                bibleData.witnessLeeWritings.forEach(item => {
+                    copyStr += `出處著作/生命讀經：${item.bookTitle}\n`;
+                    copyStr += `信息摘錄：「${item.excerpt}」\n`;
+                    copyStr += `真理看見與生命應用：${item.application}\n\n`;
+                });
+            }
+
+            // Add Footnotes if any
+            let allFootnotes = [];
+            bibleData.verses.forEach(v => {
+                if (v.footnotes) {
+                    v.footnotes.forEach(f => {
+                        allFootnotes.push({ verseNum: v.number, ...f });
+                    });
+                }
+            });
+
+            if (document.getElementById('includeFootnotes').checked && allFootnotes.length > 0) {
+                copyStr += `【本章註解】\n`;
+                allFootnotes.forEach(fn => {
+                    copyStr += `第 ${fn.verseNum} 節 [註${fn.noteNum}] 「${fn.phrase}」：${fn.text}\n`;
+                });
+            }
+
+            // Copy Action using robust fallback mechanism
+            const tempTextArea = document.createElement("textarea");
+            tempTextArea.value = copyStr;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            try {
+                document.execCommand('copy');
+                showToast("已成功複製中英文對照經文與雙職事文獻！", "fa-circle-check", "text-emerald-500");
+            } catch (err) {
+                showToast("複製失敗，請手動複製。", "fa-circle-xmark", "text-rose-500");
+            }
+            document.body.removeChild(tempTextArea);
+        }
+
+        // Build elegant Word documents (.doc XML / HTML formats perfectly compliant with MS Word)
+        function downloadWordDocument() {
+            if (!bibleData) return;
+
+            const layoutStyle = document.querySelector('input[name="layoutStyle"]:checked').value;
+            const includeNotes = document.getElementById('includeFootnotes').checked;
+            const markNotes = document.getElementById('markFootnotes').checked;
+            const includeSummary = document.getElementById('includeSummary').checked;
+            const includeNee = document.getElementById('includeNeeWritings').checked;
+            const includeLee = document.getElementById('includeLeeWritings').checked;
+
+            // Document Headers to make Word render it natively in Print Layout
+            let wordHtml = `
+            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+            <head>
+                <meta charset="utf-8">
+                <title>${bibleData.reference} - 中英文恢復本聖經</title>
+                <!--[if gte mso 9]>
+                <xml>
+                    <w:WordDocument>
+                        <w:View>Print</w:View>
+                        <w:Zoom>100</w:Zoom>
+                        <w:DoNotOptimizeForBrowser/>
+                    </w:WordDocument>
+                </xml>
+                <![endif]-->
+                <style>
+                    body {
+                        font-family: 'Times New Roman', 'Noto Serif TC', '標楷體', serif;
+                        line-height: 1.6;
+                        color: #1c1917;
+                        padding: 30px;
+                    }
+                    .header-title {
+                        font-size: 24pt;
+                        font-weight: bold;
+                        color: #78350f;
+                        text-align: center;
+                        margin-bottom: 5px;
+                        font-family: 'Noto Serif TC', '標楷體', serif;
+                    }
+                    .header-subtitle {
+                        font-size: 11pt;
+                        color: #57534e;
+                        text-align: center;
+                        margin-bottom: 25px;
+                    }
+                    .summary-box {
+                        background-color: #fef3c7;
+                        border: 1px solid #f59e0b;
+                        padding: 15px;
+                        margin-bottom: 25px;
+                        font-size: 10.5pt;
+                        border-radius: 6px;
+                    }
+                    .summary-title {
+                        font-weight: bold;
+                        color: #78350f;
+                        margin-bottom: 5px;
+                    }
+                    .nee-box {
+                        background-color: #fdfaf7;
+                        border-left: 4px solid #78350f;
+                        padding: 15px;
+                        margin-bottom: 20px;
+                    }
+                    .nee-title {
+                        font-weight: bold;
+                        color: #78350f;
+                        font-size: 11pt;
+                        margin-bottom: 8px;
+                    }
+                    .lee-box {
+                        background-color: #f4faf7;
+                        border-left: 4px solid #065f46;
+                        padding: 15px;
+                        margin-bottom: 20px;
+                    }
+                    .lee-title {
+                        font-weight: bold;
+                        color: #065f46;
+                        font-size: 11pt;
+                        margin-bottom: 8px;
+                    }
+                    .excerpt-style {
+                        font-style: italic;
+                        color: #44403c;
+                        margin-bottom: 8px;
+                        display: block;
+                    }
+                    table.bible-table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-bottom: 30px;
+                    }
+                    table.bible-table td {
+                        padding: 10px 15px;
+                        border-bottom: 1px solid #e7e5e4;
+                        vertical-align: top;
+                    }
+                    .verse-number {
+                        font-weight: bold;
+                        color: #b45309;
+                        margin-right: 8px;
+                    }
+                    .zh-text {
+                        font-size: 11.5pt;
+                        color: #0c0a09;
+                    }
+                    .en-text {
+                        font-size: 10.5pt;
+                        color: #44403c;
+                        font-style: italic;
+                    }
+                    .section-divider {
+                        border-bottom: 2px solid #78350f;
+                        margin: 25px 0 15px 0;
+                    }
+                    .footnote-header {
+                        font-size: 14pt;
+                        font-weight: bold;
+                        color: #78350f;
+                        margin-bottom: 15px;
+                    }
+                    .footnote-item {
+                        font-size: 9.5pt;
+                        margin-bottom: 8px;
+                        color: #44403c;
+                    }
+                    .note-tag {
+                        font-weight: bold;
+                        color: #b45309;
+                    }
+                    .keyword-highlight {
+                        background-color: #fef3c7;
+                        padding: 0 2px;
+                        border-radius: 2px;
+                    }
+                </style>
+            </head>
+            <body>
+            `;
+
+            // 1. Header Information
+            wordHtml += `<div class="header-title">${bibleData.reference}</div>`;
+            wordHtml += `<div class="header-subtitle">中英文聖經恢復本對照與研讀資料</div>`;
+
+            // 2. Summary Card
+            if (includeSummary && bibleData.summary) {
+                wordHtml += `
+                <div class="summary-box">
+                    <div class="summary-title">【章節真理要點與研讀摘要】</div>
+                    <div>${bibleData.summary}</div>
+                </div>`;
+            }
+
+            // 3. Layout Styles Generator
+            if (layoutStyle === "table") {
+                wordHtml += `<table class="bible-table">`;
+                bibleData.verses.forEach(v => {
+                    let processedZh = v.zh;
+                    if (includeNotes && markNotes && v.footnotes) {
+                        v.footnotes.forEach(fn => {
+                            const marker = `<sup style="color: #b45309; font-weight:bold;">[註${fn.noteNum}]</sup>`;
+                            processedZh = processedZh.replace(fn.phrase, `<span class="keyword-highlight">${fn.phrase}</span>${marker}`);
+                        });
+                    }
+
+                    wordHtml += `
+                    <tr>
+                        <td width="50%" class="zh-text">
+                            <span class="verse-number">${v.number}</span>${processedZh}
+                        </td>
+                        <td width="50%" class="en-text" style="border-left: 1px dashed #e7e5e4;">
+                            <span class="verse-number" style="color: #a1a1aa;">${v.number}</span>${v.en}
+                        </td>
+                    </tr>`;
+                });
+                wordHtml += `</table>`;
+
+            } else if (layoutStyle === "interlinear") {
+                bibleData.verses.forEach(v => {
+                    let processedZh = v.zh;
+                    if (includeNotes && markNotes && v.footnotes) {
+                        v.footnotes.forEach(fn => {
+                            const marker = `<sup style="color: #b45309; font-weight:bold;">[註${fn.noteNum}]</sup>`;
+                            processedZh = processedZh.replace(fn.phrase, `<span class="keyword-highlight">${fn.phrase}</span>${marker}`);
+                        });
+                    }
+
+                    wordHtml += `
+                    <div style="margin-bottom: 18px; padding-bottom: 8px; border-bottom: 1px solid #f5f5f4;">
+                        <div class="zh-text"><span class="verse-number">${v.number}</span>${processedZh}</div>
+                        <div class="en-text" style="margin-top: 4px; margin-left: 15px;"><span class="verse-number" style="color: #a1a1aa;">${v.number}</span>${v.en}</div>
+                    </div>`;
+                });
+
+            } else {
+                wordHtml += `<div class="section-divider"></div>`;
+                wordHtml += `<h3 style="color:#78350f; font-family:'Noto Serif TC';">中文恢復本經文</h3><div style="margin-bottom:30px;">`;
+                bibleData.verses.forEach(v => {
+                    let processedZh = v.zh;
+                    if (includeNotes && markNotes && v.footnotes) {
+                        v.footnotes.forEach(fn => {
+                            const marker = `<sup style="color: #b45309; font-weight:bold;">[註${fn.noteNum}]</sup>`;
+                            processedZh = processedZh.replace(fn.phrase, `<span class="keyword-highlight">${fn.phrase}</span>${marker}`);
+                        });
+                    }
+                    wordHtml += `<span class="zh-text" style="margin-right:8px;"><span class="verse-number">${v.number}</span>${processedZh}</span> `;
+                });
+                wordHtml += `</div>`;
+
+                wordHtml += `<div class="section-divider"></div>`;
+                wordHtml += `<h3 style="color:#78350f; font-family:'Noto Serif TC';">英文 Recovery Version</h3><div style="margin-bottom:30px;">`;
+                bibleData.verses.forEach(v => {
+                    wordHtml += `<span class="en-text" style="margin-right:8px;"><span class="verse-number" style="color: #a1a1aa;">${v.number}</span>${v.en}</span> `;
+                });
+                wordHtml += `</div>`;
+            }
+
+            // 4. Add Watchman Nee Section
+            if (includeNee && bibleData.watchmanNeeWritings && bibleData.watchmanNeeWritings.length > 0) {
+                wordHtml += `
+                <div class="section-divider"></div>
+                <h3 style="color:#78350f; font-family:'Noto Serif TC';">【倪柝聲弟兄相關著作對照】</h3>
+                `;
+                bibleData.watchmanNeeWritings.forEach(item => {
+                    wordHtml += `
+                    <div class="nee-box">
+                        <div class="nee-title">書名信息：${item.bookTitle}</div>
+                        <span class="excerpt-style">「 ${item.excerpt} 」</span>
+                        <div style="font-size: 9.5pt; color: #57534e; margin-top: 5px;">
+                            <strong>屬靈看見與實行：</strong>${item.application}
+                        </div>
+                    </div>`;
+                });
+            }
+
+            // 5. Add Witness Lee Section
+            if (includeLee && bibleData.witnessLeeWritings && bibleData.witnessLeeWritings.length > 0) {
+                wordHtml += `
+                <div class="section-divider"></div>
+                <h3 style="color:#065f46; font-family:'Noto Serif TC';">【李常受弟兄相關著作與生命讀經對照】</h3>
+                `;
+                bibleData.witnessLeeWritings.forEach(item => {
+                    wordHtml += `
+                    <div class="lee-box">
+                        <div class="lee-title">書名/生命讀經：${item.bookTitle}</div>
+                        <span class="excerpt-style">「 ${item.excerpt} 」</span>
+                        <div style="font-size: 9.5pt; color: #1e293b; margin-top: 5px;">
+                            <strong>真理看見與生命應用：</strong>${item.application}
+                        </div>
+                    </div>`;
+                });
+            }
+
+            // 6. Add Footnotes
+            let allFootnotes = [];
+            bibleData.verses.forEach(v => {
+                if (v.footnotes) {
+                    v.footnotes.forEach(f => {
+                        allFootnotes.push({ verseNum: v.number, ...f });
+                    });
+                }
+            });
+
+            if (includeNotes && allFootnotes.length > 0) {
+                wordHtml += `
+                <div class="section-divider"></div>
+                <div class="footnote-header">【真理註解說明】</div>
+                <div style="margin-top: 10px;">
+                `;
+                allFootnotes.forEach(fn => {
+                    wordHtml += `
+                    <div class="footnote-item">
+                        <span class="note-tag">第 ${fn.verseNum} 節 [註 ${fn.noteNum}]</span> 
+                        指「<strong>${fn.phrase}</strong>」：${fn.text}
+                    </div>`;
+                });
+                wordHtml += `</div>`;
+            }
+
+            wordHtml += `</body></html>`;
+
+            // Convert to download blob
+            const blob = new Blob([wordHtml], { type: "application/msword;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `${bibleData.reference}_中英文對照經文與雙職事研讀文獻.doc`;
+            document.body.appendChild(a);
+            a.click();
